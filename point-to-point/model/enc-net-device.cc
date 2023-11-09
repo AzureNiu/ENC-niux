@@ -129,7 +129,7 @@ namespace ns3 {
 			packet->RemoveHeader(h);
 			FlowIdTag t;
 			uint32_t qIndex = m_queue->GetLastQueue();
-			//m_node->SwitchNotifyDequeue(m_ifIndex, qIndex, p);
+			m_node->SwitchNotifyDequeue(m_ifIndex, qIndex, p);
 			p->RemovePacketTag(t);
 			m_traceDequeue(p, qIndex);
 			TransmitStart(p);
