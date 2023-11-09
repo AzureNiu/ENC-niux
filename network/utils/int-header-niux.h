@@ -79,8 +79,8 @@ public:
 
 	MyIntHeader();
 	void PushRoute(uint8_t rID);
-	void PushDepth(uint8_t _routeID, uint32_t _depth, uint8_t _maxRate);
-	void PushRatio(uint8_t _routeID, uint16_t _ratio, uint8_t _maxRate);
+	int PushDepth(uint8_t _routeID, uint32_t _depth, uint8_t _maxRate);
+	int PushRatio(uint8_t _routeID, uint16_t _ratio, uint8_t _maxRate);
 	void Serialize (Buffer::Iterator start) const;
 	uint32_t Deserialize (Buffer::Iterator start);
 };
