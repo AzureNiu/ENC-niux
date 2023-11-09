@@ -178,11 +178,19 @@ void SwitchNode::SwitchNotifyDequeue(uint32_t ifIndex, uint32_t qIndex, Ptr<Pack
 	if (buf[PppHeader::GetStaticSize() + 9] == 0x06) {
 		MyIntHeader *ih = (MyIntHeader*)&buf[PppHeader::GetStaticSize() + 20 + 20];
 		Ptr<EncNetDevice> dev = DynamicCast<EncNetDevice>(m_devices[ifIndex]);
-		ih->PushRoute(id);
+
+		int push_rst;
 		uint64_t _max_rate = max_rate>>30;
-		ih->PushDepth(id, dev->GetQueue()->GetNBytesTotal(), _max_rate);
-		uint64_t _ratio = (dev->GetDataRate().GetBitRate()*10000)/max_rate;
-		ih->PushRatio(id, _ratio, _max_rate);
+		push_rst = ih->PushDepth(id, dev->GetQueue()->GetNBytesTotal(), _max_rate);
+
+		if (push_rst < 0) {
+			uint64_t _ratio = (dev->GetDataRate().GetBitRate()*10000)/max_rate;
+			push_rst = ih->PushRatio(id, _ratio, _max_rate);
+		}
+
+		if (push_rst <= 0) {
+			ih->PushRoute(id);
+		}
 	}
 
 	m_txBytes[ifIndex] += p->GetSize();
