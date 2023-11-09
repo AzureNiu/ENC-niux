@@ -4,16 +4,20 @@ namespace ns3 {
 
 void MyIntHeader::PushRoute(uint8_t rID) {
 	if (hinfo.nodeNum < maxNum)
-		if (rand()%16 == 0)
+		if (rand()%4 == 0)
 			routeInfo[hinfo.nodeNum++] = rID;
 }
 
-void MyIntHeader::PushDepth(uint8_t _routeID, uint32_t _depth, uint8_t _maxRate) {
+int MyIntHeader::PushDepth(uint8_t _routeID, uint32_t _depth, uint8_t _maxRate) {
 	_depth = _depth / qlenUnit;
 	_depth = (_depth < 0xffff)? _depth : 0xffff;
 	
-	if (hinfo.depthNum < maxNum) {
+	if (_depth <= 0) {
+		return -1;
+	}
+	else if (hinfo.depthNum < maxNum) {
 		dinfo[hinfo.depthNum++].Set(_routeID, _depth, _maxRate);
+		return 1;
 	}
 	else {
 		uint16_t min_depth = dinfo[0].depth;
@@ -26,13 +30,16 @@ void MyIntHeader::PushDepth(uint8_t _routeID, uint32_t _depth, uint8_t _maxRate)
 		}
 		if (_depth > min_depth) {
 			dinfo[min_idx].Set(_routeID, _depth, _maxRate);
+			return 1;
 		}
+		return 0;
 	}
 }
 
-void MyIntHeader::PushRatio(uint8_t _routeID, uint16_t _ratio, uint8_t _maxRate) {
+int MyIntHeader::PushRatio(uint8_t _routeID, uint16_t _ratio, uint8_t _maxRate) {
 	if (hinfo.ratioNum < maxNum) {
 		rinfo[hinfo.ratioNum++].Set(_routeID, _ratio, _maxRate);
+		return 1;
 	}
 	else {
 		uint16_t min_ratio = rinfo[0].ratio;
@@ -45,7 +52,9 @@ void MyIntHeader::PushRatio(uint8_t _routeID, uint16_t _ratio, uint8_t _maxRate)
 		}
 		if (_ratio > min_ratio) {
 			rinfo[min_idx].Set(_routeID, _ratio, _maxRate);
+			return 1;
 		}
+		return 0;
 	}
 }
 
