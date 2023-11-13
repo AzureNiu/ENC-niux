@@ -82,6 +82,7 @@ public:
   void ConnectWithoutContext(const CallbackBase& callback);
   void DisconnectWithoutContext(const CallbackBase& callback);
 
+  bool Attach (Ptr<EncChannel> ch);
 
   virtual Ptr<Channel> GetChannel (void) const;
   
