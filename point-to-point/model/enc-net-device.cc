@@ -129,7 +129,7 @@ namespace ns3 {
 			packet->RemoveHeader(h);
 			FlowIdTag t;
 			uint32_t qIndex = m_queue->GetLastQueue();
-			m_node->SwitchNotifyDequeue(m_ifIndex, qIndex, p);
+			//m_node->SwitchNotifyDequeue(m_ifIndex, qIndex, p);
 			p->RemovePacketTag(t);
 			m_traceDequeue(p, qIndex);
 			TransmitStart(p);
@@ -180,6 +180,43 @@ namespace ns3 {
 			m_node->SwitchReceiveFromDevice(this, packet, ch);
 		//}
 		return;
+	}
+
+	bool
+		EncNetDevice::Attach(Ptr<EncChannel> ch)
+	{
+		NS_LOG_FUNCTION(this << &ch);
+		m_channel = ch;
+		m_channel->Attach(this);
+		NotifyLinkUp();
+		return true;
+	}
+
+	bool
+		EncNetDevice::TransmitStart(Ptr<Packet> p)
+	{
+		NS_LOG_FUNCTION(this << p);
+		NS_LOG_LOGIC("UID is " << p->GetUid() << ")");
+		//
+		// This function is called to start the process of transmitting a packet.
+		// We need to tell the channel that we've started wiggling the wire and
+		// schedule an event that will be executed when the transmission is complete.
+		//
+		NS_ASSERT_MSG(m_txMachineState == READY, "Must be READY to transmit");
+		m_txMachineState = BUSY;
+		m_currentPkt = p;
+		m_phyTxBeginTrace(m_currentPkt);
+		Time txTime = m_bps.CalculateBytesTxTime(p->GetSize());
+		Time txCompleteTime = txTime + m_tInterframeGap;
+		NS_LOG_LOGIC("Schedule TransmitCompleteEvent in " << txCompleteTime.GetSeconds() << "sec");
+		Simulator::Schedule(txCompleteTime, &EncNetDevice::TransmitComplete, this);
+
+		bool result = m_channel->TransmitStart(p, this, txTime);
+		if (result == false)
+		{
+			m_phyTxDropTrace(p);
+		}
+		return result;
 	}
 
 	bool EncNetDevice::SwitchSend (uint32_t qIndex, Ptr<Packet> packet, CustomHeader &ch){
