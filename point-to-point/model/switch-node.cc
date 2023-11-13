@@ -48,6 +48,7 @@ SwitchNode::SwitchNode(uint8_t _id, uint64_t _max_rate){
 	//m_ecmpSeed = m_id;
 	id = _id;
 	max_rate = _max_rate;
+
 	m_mmu = CreateObject<SwitchMmu>();
 	for (uint32_t i = 0; i < pCnt; i++)
 		for (uint32_t j = 0; j < pCnt; j++)
@@ -59,6 +60,11 @@ SwitchNode::SwitchNode(uint8_t _id, uint64_t _max_rate){
 		m_lastPktSize[i] = m_lastPktTs[i] = 0;
 	for (uint32_t i = 0; i < pCnt; i++)
 		m_u[i] = 0;
+
+	for (uint32_t i = 0; i < pCnt; i++) {
+		Ptr<EncNetDevice> device = DynamicCast<EncNetDevice>(m_devices[i]);
+		device->SetDataRate(max_rate);
+	}
 }
 
 int SwitchNode::GetOutDev(Ptr<const Packet> p, CustomHeader &ch){
