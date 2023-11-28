@@ -44,10 +44,9 @@ TypeId SwitchNode::GetTypeId (void)
   return tid;
 }
 
-SwitchNode::SwitchNode(uint8_t _id, uint64_t _max_rate){
+SwitchNode::SwitchNode(uint8_t _id){
 	//m_ecmpSeed = m_id;
 	id = _id;
-	max_rate = _max_rate;
 
 	m_mmu = CreateObject<SwitchMmu>();
 	for (uint32_t i = 0; i < pCnt; i++)
@@ -60,11 +59,14 @@ SwitchNode::SwitchNode(uint8_t _id, uint64_t _max_rate){
 		m_lastPktSize[i] = m_lastPktTs[i] = 0;
 	for (uint32_t i = 0; i < pCnt; i++)
 		m_u[i] = 0;
+	for (uint32_t i = 0; i < pCnt; i++)
+		max_rate[i] = 0;
+}
 
-	for (uint32_t i = 0; i < pCnt; i++) {
-		Ptr<EncNetDevice> device = DynamicCast<EncNetDevice>(m_devices[i]);
-		device->SetDataRate(max_rate);
-	}
+void SwitchNode::SetMaxRate(uint8_t _port, uint64_t _max_rate) {
+	max_rate[_port] = _max_rate;
+	Ptr<EncNetDevice> device = DynamicCast<EncNetDevice>(m_devices[_port]);
+	device->SetDataRate(_max_rate);
 }
 
 int SwitchNode::GetOutDev(Ptr<const Packet> p, CustomHeader &ch){
@@ -179,29 +181,31 @@ void SwitchNode::SwitchNotifyDequeue(uint32_t ifIndex, uint32_t qIndex, Ptr<Pack
 		//CheckAndSendPfc(inDev, qIndex);
 		CheckAndSendResume(inDev, qIndex);
 	}
+
+	m_txBytes[ifIndex] += p->GetSize();
+	m_lastPktSize[ifIndex] = p->GetSize();
+	m_lastPktTs[ifIndex] = Simulator::Now().GetTimeStep();
 	
 	uint8_t* buf = p->GetBuffer();
 	if (buf[PppHeader::GetStaticSize() + 9] == 0x06) {
 		MyIntHeader *ih = (MyIntHeader*)&buf[PppHeader::GetStaticSize() + 20 + 20];
 		Ptr<EncNetDevice> dev = DynamicCast<EncNetDevice>(m_devices[ifIndex]);
 
+		uint32_t ts = m_lastPktTs[ifIndex];
 		int push_rst;
-		uint64_t _max_rate = max_rate>>30;
-		push_rst = ih->PushDepth(id, dev->GetQueue()->GetNBytesTotal(), _max_rate);
+		uint64_t _max_rate = max_rate[ifIndex]>>23;
+		uint16_t depth = dev->GetQueue()->GetNBytesTotal();
+		push_rst = ih->PushDepth(id, ifIndex, depth, ts, _max_rate);
 
 		if (push_rst < 0) {
-			uint64_t _ratio = (dev->GetDataRate().GetBitRate()*10000)/max_rate;
-			push_rst = ih->PushRatio(id, _ratio, _max_rate);
+			uint64_t _ratio = (dev->GetDataRate().GetBitRate()*10000)/max_rate[ifIndex];
+			push_rst = ih->PushRatio(id, ifIndex, _ratio, ts, _max_rate);
 		}
 
 		if (push_rst <= 0) {
-			ih->PushRoute(id);
+			ih->PushRoute(id, ifIndex);
 		}
 	}
-
-	m_txBytes[ifIndex] += p->GetSize();
-	m_lastPktSize[ifIndex] = p->GetSize();
-	m_lastPktTs[ifIndex] = Simulator::Now().GetTimeStep();
 }
 
 } /* namespace ns3 */
