@@ -2,13 +2,13 @@
 
 namespace ns3 {
 
-void MyIntHeader::PushRoute(uint8_t rID) {
-	if (hinfo.nodeNum < maxNum)
+void MyIntHeader::PushRoute(uint8_t _id, uint8_t _port) {
+	if (hinfo.nodeNum < idNum)
 		if (rand()%4 == 0)
-			routeInfo[hinfo.nodeNum++] = rID;
+			iinfo[hinfo.nodeNum++].Set(_id, _port);
 }
 
-int MyIntHeader::PushDepth(uint8_t _routeID, uint32_t _depth, uint8_t _maxRate) {
+int MyIntHeader::PushDepth(uint8_t _id, uint8_t _port, uint16_t _depth, uint32_t _ts, uint8_t _maxRate) {
 	_depth = _depth / qlenUnit;
 	_depth = (_depth < 0xffff)? _depth : 0xffff;
 	
@@ -16,7 +16,7 @@ int MyIntHeader::PushDepth(uint8_t _routeID, uint32_t _depth, uint8_t _maxRate) 
 		return -1;
 	}
 	else if (hinfo.depthNum < maxNum) {
-		dinfo[hinfo.depthNum++].Set(_routeID, _depth, _maxRate);
+		dinfo[hinfo.depthNum++].Set(_id, _port, _depth, _ts, _maxRate);
 		return 1;
 	}
 	else {
@@ -29,16 +29,16 @@ int MyIntHeader::PushDepth(uint8_t _routeID, uint32_t _depth, uint8_t _maxRate) 
 			}
 		}
 		if (_depth > min_depth) {
-			dinfo[min_idx].Set(_routeID, _depth, _maxRate);
+			dinfo[min_idx].Set(_id, _port, _depth, _ts, _maxRate);
 			return 1;
 		}
 		return 0;
 	}
 }
 
-int MyIntHeader::PushRatio(uint8_t _routeID, uint16_t _ratio, uint8_t _maxRate) {
+int MyIntHeader::PushRatio(uint8_t _id, uint8_t _port, uint16_t _ratio, uint32_t _ts, uint8_t _maxRate) {
 	if (hinfo.ratioNum < maxNum) {
-		rinfo[hinfo.ratioNum++].Set(_routeID, _ratio, _maxRate);
+		rinfo[hinfo.ratioNum++].Set(_id, _port, _ratio, _ts, _maxRate);
 		return 1;
 	}
 	else {
@@ -51,7 +51,7 @@ int MyIntHeader::PushRatio(uint8_t _routeID, uint16_t _ratio, uint8_t _maxRate) 
 			}
 		}
 		if (_ratio > min_ratio) {
-			rinfo[min_idx].Set(_routeID, _ratio, _maxRate);
+			rinfo[min_idx].Set(_id, _port, _ratio, _ts, _maxRate);
 			return 1;
 		}
 		return 0;
@@ -60,24 +60,24 @@ int MyIntHeader::PushRatio(uint8_t _routeID, uint16_t _ratio, uint8_t _maxRate) 
 
 void MyIntHeader::Serialize (Buffer::Iterator start) const{
 	Buffer::Iterator i = start;
-	i.WriteU32(hinfo.buf);
+	i.WriteU16(hinfo.buf);
+	for (int j = 0; j < idNum; ++j)
+		i.WriteU16(iinfo[j].buf);
 	for (int j = 0; j < maxNum; ++j)
-		i.WriteU8(routeInfo[j]);
+		i.WriteU64(dinfo[j].buf);
 	for (int j = 0; j < maxNum; ++j)
-		i.WriteU32(dinfo[j].buf);
-	for (int j = 0; j < maxNum; ++j)
-		i.WriteU32(rinfo[j].buf);
+		i.WriteU64(rinfo[j].buf);
 }
 
 uint32_t MyIntHeader::Deserialize (Buffer::Iterator start){
 	Buffer::Iterator i = start;
-	hinfo.buf = i.ReadU32();
+	hinfo.buf = i.ReadU16();
+	for (int j = 0; j < idNum; ++j)
+		iinfo[j].buf = i.ReadU16();
 	for (int j = 0; j < maxNum; ++j)
-		routeInfo[j] = i.ReadU8();
+		dinfo[j].buf = i.ReadU64();
 	for (int j = 0; j < maxNum; ++j)
-		dinfo[j].buf = i.ReadU32();
-	for (int j = 0; j < maxNum; ++j)
-		rinfo[j].buf = i.ReadU32();
+		rinfo[j].buf = i.ReadU64();
 }
 
 }
