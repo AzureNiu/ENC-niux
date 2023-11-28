@@ -26,7 +26,7 @@ class SwitchNode : public Node{
 	double m_u[pCnt];
 
 	uint8_t id;
-	uint64_t max_rate;
+	uint64_t max_rate[pCnt];
 
 protected:
 	bool m_ecnEnabled;
@@ -45,7 +45,8 @@ public:
 	Ptr<SwitchMmu> m_mmu;
 
 	static TypeId GetTypeId (void);
-	SwitchNode(uint8_t _id, uint64_t _max_rate);
+	SwitchNode(uint8_t _id);
+	void SetMaxRate(uint8_t _port, uint64_t _max_rate);
 	void SetEcmpSeed(uint32_t seed);
 	void AddTableEntry(Ipv4Address &dstAddr, uint32_t intf_idx);
 	void ClearTable();
