@@ -14,6 +14,8 @@
 
 `network/utils/int-header-niux.h/cc` 根据实际需求，重新设计自定义INT头（后期可重命名）
 
+`point-to-point/model/enc-header.h/cc` 基于qbb进行修改，修改为适合我们使用的ACK包读取和赋值形式
+
 `point-to-point/model/enc-channel.h/cc` 基于qbb进行修改，去除RDMA部分，仅保留可供中间路由器使用的内容
 
 `point-to-point/model/enc-net-device.h/cc` 基于qbb进行修改，去除RDMA部分，仅保留可供中间路由器使用的内容
