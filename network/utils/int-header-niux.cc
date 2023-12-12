@@ -2,6 +2,10 @@
 
 namespace ns3 {
 
+uint32_t MyIntHeader::GetStaticSize() {
+	return sizeof(hinfo)+sizeof(idInfo)+sizeof(dinfo)+sizeof(rinfo);
+}
+
 void MyIntHeader::PushRoute(uint8_t _id, uint8_t _port) {
 	if (hinfo.nodeNum < idNum)
 		if (rand()%4 == 0)

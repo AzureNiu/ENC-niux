@@ -84,7 +84,7 @@ public:
 
 class MyIntHeader {
 public:
-	static const uint32_t idNum = 3;
+	static const uint32_t idNum = 1;
 	static const uint32_t maxNum = 2;
 
 	// headerInfo: 2 Bytes
@@ -99,6 +99,7 @@ public:
 	static const uint32_t qlenUnit = 80;
 
 	MyIntHeader();
+	static uint32_t GetStaticSize();
 	void PushRoute(uint8_t _id, uint8_t _port);
 	int PushDepth(uint8_t _id, uint8_t _port, uint16_t _depth, uint32_t _ts, uint8_t _maxRate);
 	int PushRatio(uint8_t _id, uint8_t _port, uint16_t _ratio, uint32_t _ts, uint8_t _maxRate);

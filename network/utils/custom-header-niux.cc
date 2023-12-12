@@ -143,12 +143,17 @@ void CustomHeader::Serialize (Buffer::Iterator start) const{
 		  if (optionLen <= 32)
 			  i.Write(tcp.optionBuf, optionLen);
 			tcp.ih.Serialize(i);
-	  }else if (l3Prot == 0x11){ // UDP
+	  } else if (l3Prot == 0x11){ // UDP
 		  // udp header
 		  i.WriteHtonU16 (udp.sport);
 		  i.WriteHtonU16 (udp.dport);
 		  i.WriteHtonU16 (udp.payload_size);
 		  i.WriteHtonU16 (0);
+	  } else if (l3Prot == 0xFC || l3Prot == 0xFD){ // ACK or NACK
+		  i.WriteU16(ack.sport);
+		  i.WriteU16(ack.dport);
+		  i.WriteU8(ack.isOwn);
+		  ack.ih.Serialize(i);
 	  }
   }
 }
@@ -248,9 +253,9 @@ CustomHeader::Deserialize (Buffer::Iterator start)
 		  }
 		  l4Size = tcp.length * 4;
 
-			l4Size += tcp.ih.Deserialize(i);
+		l4Size += tcp.ih.Deserialize(i);
 
-	  }else if (l3Prot == 0x11){ // UDP
+	  } else if (l3Prot == 0x11){ // UDP
 		  i = start;
 		  i.Next(l2Size + l3Size);
 		  // udp header
@@ -263,6 +268,13 @@ CustomHeader::Deserialize (Buffer::Iterator start)
 			  i.Next(2);
 		  }
 		  l4Size = 8;
+	  } else if (l3Prot == 0xFC || l3Prot == 0xFD) { // ACK or NACK
+		  ack.sport = i.ReadU16();
+		  ack.dport = i.ReadU16();
+		  ack.isOwn = i.ReadU8();
+		  l4Size = 5;
+		  if (getInt)
+			l4Size += ack.ih.Deserialize(i);
 	  }
   }
 

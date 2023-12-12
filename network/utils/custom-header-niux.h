@@ -99,6 +99,12 @@ public:
 		  uint16_t dport;   //!< Destination port
 		  uint16_t payload_size;
 		} udp;
+    struct {
+      uint16_t sport;
+      uint16_t dport;
+      uint8_t isOwn;
+      MyIntHeader ih;
+    } ack;
   };
 
 };
