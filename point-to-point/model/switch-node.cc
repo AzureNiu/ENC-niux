@@ -78,7 +78,7 @@ int SwitchNode::GetOutDev(Ptr<const Packet> p, CustomHeader &ch){
 		return -1;
 
 	// entry found
-	auto &nexthops = entry->second;
+	int nexthops = entry->second;
 
 	// pick one next hop based on hash
 	union {
@@ -91,10 +91,10 @@ int SwitchNode::GetOutDev(Ptr<const Packet> p, CustomHeader &ch){
 		buf.u32[2] = ch.tcp.sport | ((uint32_t)ch.tcp.dport << 16);
 	else if (ch.l3Prot == 0x11)
 		buf.u32[2] = ch.udp.sport | ((uint32_t)ch.udp.dport << 16);
+	else if (ch.l3Prot == 0xFC || ch.l3Prot == 0xFD)
+		buf.u32[2] = ch.ack.sport | ((uint32_t)ch.ack.dport << 16);
 
-	//uint32_t idx = EcmpHash(buf.u8, 12, m_ecmpSeed) % nexthops.size();
-	uint32_t idx = 0;
-	return nexthops[idx];
+	return nexthops;
 }
 
 void SwitchNode::CheckAndSendPfc(uint32_t inDev, uint32_t qIndex){
@@ -145,7 +145,7 @@ void SwitchNode::SendToDev(Ptr<Packet>p, CustomHeader &ch){
 
 void SwitchNode::AddTableEntry(Ipv4Address &dstAddr, uint32_t intf_idx){
 	uint32_t dip = dstAddr.Get();
-	m_rtTable[dip].push_back(intf_idx);
+	m_rtTable[dip] = intf_idx;
 }
 
 void SwitchNode::ClearTable(){
