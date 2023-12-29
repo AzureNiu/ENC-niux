@@ -35,18 +35,22 @@ public:
   /**
    * \param pg The PG
    */
+  void SetPG (uint16_t pg);
+  void SetSeq(uint32_t seq);
+  void SetFlags(uint16_t _flags);
   void SetSport(uint32_t _sport);
   void SetDport(uint32_t _dport);
-  void SetIsOwn(uint8_t _isOwn);
   void SetMyIntHeader(const MyIntHeader &_ih);
 
 //Getters
   /**
    * \return The pg
    */
+  uint16_t GetPG () const;
+  uint32_t GetSeq() const;
+  uint16_t GetFlags() const;
   uint16_t GetSport() const;
   uint16_t GetDport() const;
-  uint8_t GetIsOwn() const;
 
   static TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
@@ -58,7 +62,9 @@ public:
 
 private:
   uint16_t sport, dport;
-  uint8_t isOwn;
+  uint16_t flags;
+  uint16_t m_pg;
+  uint32_t m_seq; // the sequence number.
   MyIntHeader ih;
   
 };
