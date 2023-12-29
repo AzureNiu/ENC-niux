@@ -152,7 +152,9 @@ void CustomHeader::Serialize (Buffer::Iterator start) const{
 	  } else if (l3Prot == 0xFC || l3Prot == 0xFD){ // ACK or NACK
 		  i.WriteU16(ack.sport);
 		  i.WriteU16(ack.dport);
-		  i.WriteU8(ack.isOwn);
+		  i.WriteU16(ack.flags);
+		  i.WriteU16(ack.pg);
+		  i.WriteU32(ack.seq);
 		  ack.ih.Serialize(i);
 	  }
   }
@@ -271,8 +273,10 @@ CustomHeader::Deserialize (Buffer::Iterator start)
 	  } else if (l3Prot == 0xFC || l3Prot == 0xFD) { // ACK or NACK
 		  ack.sport = i.ReadU16();
 		  ack.dport = i.ReadU16();
-		  ack.isOwn = i.ReadU8();
-		  l4Size = 5;
+		  ack.flags = i.ReadU16();
+		  ack.pg = i.ReadU16();
+		  ack.seq = i.ReadU32();
+		  l4Size = 12;
 		  if (getInt)
 			l4Size += ack.ih.Deserialize(i);
 	  }
