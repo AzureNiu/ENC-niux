@@ -102,7 +102,9 @@ public:
     struct {
       uint16_t sport;
       uint16_t dport;
-      uint8_t isOwn;
+      uint16_t flags; // including isOwn
+	uint16_t pg;
+	uint32_t seq;
       MyIntHeader ih;
     } ack;
   };
