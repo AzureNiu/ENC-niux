@@ -12,7 +12,7 @@ namespace ns3 {
 	NS_OBJECT_ENSURE_REGISTERED(encHeader);
 
 	encHeader::encHeader()
-		:  sport(0), dport(0), isOwn(0)
+		:  sport(0), dport(0), flags(0), m_pg(0)
 	{}
 
 	encHeader::~encHeader()
@@ -25,8 +25,18 @@ namespace ns3 {
 		dport = _dport;
 	}
 
-	void encHeader::SetIsOwn(uint8_t _isOwn) {
-        isOwn = _isOwn;
+	void qbbHeader::SetPG(uint16_t pg)
+	{
+		m_pg = pg;
+	}
+
+	void qbbHeader::SetSeq(uint32_t seq)
+	{
+		m_seq = seq;
+	}
+
+	void encHeader::SetFlags(uint8_t _flags) {
+        flags = _flags;
     }
 
 	void encHeader::SetMyIntHeader(const MyIntHeader &_ih){
@@ -40,9 +50,18 @@ namespace ns3 {
 		return dport;
 	}
 
-	uint8_t encHeader::GetIsOwn() const{
-        return isOwn;
+	uint16_t encHeader::GetFlags() const{
+        return flags;
     }
+	uint16_t qbbHeader::GetPG() const
+	{
+		return m_pg;
+	}
+
+	uint32_t qbbHeader::GetSeq() const
+	{
+		return m_seq;
+	}
 
 	TypeId
 		encHeader::GetTypeId(void)
@@ -68,14 +87,16 @@ namespace ns3 {
 	}
 	uint32_t encHeader::GetBaseSize() {
 		encHeader tmp;
-		return sizeof(tmp.sport) + sizeof(tmp.dport) + sizeof(tmp.isOwn);
+		return sizeof(tmp.sport) + sizeof(tmp.dport) + sizeof(tmp.flags) + sizeof(tmp.m_pg) + sizeof(tmp.m_seq);
 	}
 	void encHeader::Serialize(Buffer::Iterator start)  const
 	{
 		Buffer::Iterator i = start;
 		i.WriteU16(sport);
 		i.WriteU16(dport);
-		i.WriteU8(isOwn);
+		i.WriteU16(flags);
+		i.WriteU16(m_pg);
+		i.WriteU32(m_seq);
 
 		// write MyIntHeader
 		ih.Serialize(i);
@@ -86,7 +107,9 @@ namespace ns3 {
 		Buffer::Iterator i = start;
 		sport = i.ReadU16();
 		dport = i.ReadU16();
-		isOwn = i.ReadU8();
+		flags = i.ReadU16();
+		m_pg = i.ReadU16();
+		m_seq = i.ReadU32();
 
 		// read MyIntHeader
 		ih.Deserialize(i);
